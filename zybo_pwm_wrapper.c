@@ -109,7 +109,6 @@ void zybo_pwm_Outputs_wrapper(const real_T *Duty,
       y1[0].re = u1[0].re;
       y1[0].im = u1[0].im;
  */
-
 /* %%%-SFUNWIZ_wrapper_Outputs_Changes_END --- EDIT HERE TO _BEGIN */
 }
 
@@ -132,25 +131,43 @@ void zybo_pwm_Update_wrapper(const real_T *Duty,
  */
 #ifndef MATLAB_MEX_FILE
 // Enable motor CW > 0x3; CCW -> 0x1
+if((Duty[0] >=100 ) || (Duty[0] <= 0 )) {
+        printf("Duty cycle is outside of the allowed range.\n");
+        exit(0);
+}
 if(En[0])
 {
     if(*MOTOR_DIR_DECODING )
     {
-        if (Duty[0] > 50)
+        if (Duty[0] >= 50)
         {
-            *((unsigned *) (modulator + 1)) = 	2*(*PWM_PERIOD)*(Duty[0]-50)/100;   
-            *((unsigned *) (modulator + 2)) = 0x3; // enable CCW
+            if ((Duty[0] <= 54)&(Duty[0] > 50))
+            {
+            *((unsigned *) (modulator + 1)) =   2*(*PWM_PERIOD)*(4/100);    
+            }
+            else
+            {
+            *((unsigned *) (modulator + 1)) =   2*(*PWM_PERIOD)*(Duty[0]-50)/100;            
+            } 
+            *((unsigned *) (modulator + 2)) = 0x3; // enable CW
         }
         else
         {
-            *((unsigned *) (modulator + 1)) = 	2*(*PWM_PERIOD)*(Duty[0])/100;
+            if (Duty[0] >= 46)
+            {
+            *((unsigned *) (modulator + 1)) =   2*(*PWM_PERIOD)*(4/100);    
+            }
+            else
+            {
+            *((unsigned *) (modulator + 1)) =   2*(*PWM_PERIOD)*(50-Duty[0])/100;         
+            }
             *((unsigned *) (modulator + 2)) = 0x2; // Enable motor and enable CCW
         }
     }
     else
     {
         // Extra output port should be defined for the Direction
-        *((unsigned *) (modulator + 1)) = 	(*PWM_PERIOD)*(Duty[0])/100;   
+        *((unsigned *) (modulator + 1)) =   (*PWM_PERIOD)*(Duty[0])/100;   
         *((unsigned *) (modulator + 2)) = 0x2; // enable motor 
     }
 }
@@ -159,6 +176,7 @@ else
     *((unsigned *) (modulator + 2)) = 0x0; // enable motor    
 }
 #endif
+
 /* %%%-SFUNWIZ_wrapper_Update_Changes_END --- EDIT HERE TO _BEGIN */
 }
 /*
